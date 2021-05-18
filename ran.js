@@ -1,12 +1,12 @@
 var width = 800, height = 600
+var game_width = 450
 var fps = 60
 var time_interval = 1.0 / fps
+var num_life = 3
+var num_bomb = 3
+var title = "Project Ran"
 
 window.onkeydown = (x) => {
-/*	var e = x.key;
-	if (e.search("Arrow") > -1 || "1" == e)	current_key = x.key
-	else if (e == "i" || e == "I") time_interval -= 10
-	else if (e == "d" || e == "D") time_interval += 10*/
 	key_last = x.key
 	console.log(key_last)
 }
@@ -31,7 +31,6 @@ function Entrance() {
 	this.options = ["Start", "Practice Start", "Result"]
 	this.base_x = 100, this.base_y = 300
 	this.title_x = 450, this.title_y = 200
-	this.title = "Project Ran"
 	this.delta_y = 50
 
 	this.init = () => {
@@ -53,7 +52,7 @@ function Entrance() {
 				break
 			case "Result":
 				state = "result"
-				result.init()
+		//		result.init()
 				break
 			}
 		}
@@ -64,7 +63,7 @@ function Entrance() {
 		this.process_key()
 		c.fillStyle = "#8fdfff"
 		c.font = "40px Verdana"
-		c.fillText("Project Ran", this.title_x, this.title_y)
+		c.fillText(title, this.title_x, this.title_y)
 		this.options.forEach((value, index) => {
 			if (index === this.current_item)
 				c.fillStyle = "white"
@@ -77,11 +76,48 @@ function Entrance() {
 }
 
 function Game() {
+	this.x1 = game_width + 50
+	this.x2 = game_width + 150
+	this.x3 = game_width + 80
+	this.y1 = 140
+	this.y2 = 200
+	this.y3 = 230
+	this.y4 = 290
+	this.y5 = 450
 
 	this.init = () => {
+		this.score = 0
+		this.power = 0
+		this.life = num_life
+		this.bomb = num_bomb
+		this.stage = 1
 	}
 
 	this.draw = () => {
+		c.fillStyle = "#8fdfff"
+		c.fillRect(0, 0, game_width, canvas.height)
+		c.fillStyle = "black"
+		c.fillRect(game_width, 0, canvas.width, canvas.height)
+
+		c.fillStyle = "#d4d4d4"
+		c.font = "20px Verdana"
+		c.fillText("Score", this.x1, this.y1)
+		c.fillText("Player", this.x1, this.y2)
+		c.fillText("Bomb", this.x1, this.y3)
+		c.fillText("Power", this.x1, this.y4)
+
+		c.fillStyle = "white"
+		c.font = "20px Verdana"
+		c.fillText(this.score.toString().padStart(8, '0'), this.x2, this.y1)
+		c.fillText(this.power, this.x2, this.y4)
+		c.fillStyle = "#f2446f"
+		for (let i = 0;i < this.life;i++) c.fillText("\u2605", this.x2 + i * 20, this.y2)
+		c.fillStyle = "#2f7bf5"
+		for (let i = 0;i < this.bomb;i++) c.fillText("\u2605", this.x2 + i * 20, this.y3)
+		
+		c.fillStyle = "#8fdfff"
+		c.font = "30px Verdana"
+		c.fillText(title, this.x3, this.y5)
 	}
 }
 
