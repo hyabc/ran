@@ -144,15 +144,34 @@ function Player() {
 	this.x = 250
 	this.y = 500
 	this.border = 10
-	this.speed = 300
+	this.speed = 400
+	this.slow_speed = 200
+	this.speedchange = -1
+	this.speedchange_timeout = 0.2
+	this.shift_status = false
 
 	this.draw = () => {
 		c.beginPath()
 		c.arc(this.x, this.y, 5, 0, 360)
 		c.fillStyle = "white"
+		c.strokeStyle = "black"
 		c.lineWidth = 3
 		c.stroke()
 		c.fill()
+		
+		if (this.speedchange != -1) {
+			if (this.speedchange < this.speedchange_timeout / 2.0) 
+				var radius = this.speedchange / (this.speedchange_timeout / 2.0) * 20
+			else 
+				var radius = (this.speedchange_timeout - this.speedchange) / (this.speedchange_timeout / 2.0) * 20
+			c.beginPath()
+			c.arc(this.x, this.y, radius + 5, 0, 360)
+			c.lineWidth = 2
+			c.strokeStyle = "#a1a1a1"
+			c.stroke()
+			this.speedchange += 1.0 / fps
+			if (this.speedchange >= this.speedchange_timeout) this.speedchange = -1
+		}
 	}
 
 	this.limit_border = () => {
@@ -163,10 +182,15 @@ function Player() {
 	}
 
 	this.process_key = () => {
-		if (key_active.has("ArrowLeft")) this.x -= this.speed / fps
-		if (key_active.has("ArrowRight")) this.x += this.speed / fps
-		if (key_active.has("ArrowUp")) this.y -= this.speed / fps
-		if (key_active.has("ArrowDown")) this.y += this.speed / fps
+		if (key_active.has("Shift") !== this.shift_status) {
+			this.shift_status = key_active.has("Shift")
+			this.speedchange = 0
+		}
+		var current_speed = key_active.has("Shift") ? this.slow_speed : this.speed
+		if (key_active.has("ArrowLeft")) this.x -= current_speed / fps
+		if (key_active.has("ArrowRight")) this.x += current_speed / fps
+		if (key_active.has("ArrowUp")) this.y -= current_speed / fps
+		if (key_active.has("ArrowDown")) this.y += current_speed / fps
 		this.limit_border()
 	}
 }
