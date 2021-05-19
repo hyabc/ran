@@ -1,36 +1,25 @@
 var width = 800, height = 600
 var game_width = 500
-var fps = 60
-var time_interval = 1.0 / fps
+var fps = 120
 var num_life = 3
 var num_bomb = 3
 var title = "Project Ran"
 var key_last = "", key_active = new Set
+var delta_time, current_time
 
 window.onkeydown = (x) => {
-	key_last = x.key
-	key_active.add(x.key)
-	console.log(key_last)
+	var st = x.key
+	if (st.length === 1 && 'A' <= st[0] && st[0] <= 'Z') st = st.toLowerCase()
+	key_last = st
+	key_active.add(st)
+	console.log("keydown: " + st)
 }
 
 window.onkeyup = (x) => {
-	key_active.delete(x.key)
-}
-
-function Bullet() {
-	this.x = 10, this.y = 20
-	this.x_speed = 100.0, this.y_speed = 100.0
-
-	this.update = () => {
-		this.x += this.x_speed / fps
-		this.y += this.y_speed / fps
-	}
-	this.draw = () => {
-		c.fillStyle = "#F44336"
-		c.beginPath()
-		c.arc(this.x, this.y, 5, 0, 360)
-		c.fill()
-	}
+	var st = x.key
+	if (st.length === 1 && 'A' <= st[0] && st[0] <= 'Z') st = st.toLowerCase()
+	key_active.delete(st)
+	console.log("keyup: " + st)
 }
 
 function Entrance() {
@@ -40,22 +29,18 @@ function Entrance() {
 	this.delta_y = 50
 	this.current_item = 0
 
-	this.reset = () => {
-		this.current_item = 0
-	}
-
 	this.process_key = () => {
 		if (key_last === "ArrowDown" && this.current_item < this.options.length - 1) this.current_item++
 		if (key_last === "ArrowUp" && this.current_item > 0) this.current_item--
-		if (key_last === "Enter") {
+		if (key_last === "Enter" || key_last === "z") {
 			switch (this.options[this.current_item]) {
 			case "Start":
 				state = "game"
-				game.reset()
+				game = new Game
 				break
 			case "Practice Start":
 				state = "game"
-				game.reset()
+				game = new Game
 				break
 			case "Result":
 				state = "result"
@@ -92,25 +77,21 @@ function Pause() {
 	this.delta_y = 50
 	this.current_item = 0
 
-	this.reset = () => {
-		this.current_item = 0
-	}
-
 	this.process_key = () => {
 		if (key_last === "ArrowDown" && this.current_item < this.options.length - 1) this.current_item++
 		if (key_last === "ArrowUp" && this.current_item > 0) this.current_item--
-		if (key_last === "Enter") {
+		if (key_last === "Enter" || key_last === "z") {
 			switch (this.options[this.current_item]) {
 			case "Continue":
 				state = "game"
 				break
 			case "Restart":
 				state = "game"
-				game.reset()
+				game.init()
 				break
 			case "Return to home":
 				state = "entrance"
-				entrance.reset()
+				entrance = new Entrance
 				break
 			}
 		}
@@ -140,15 +121,86 @@ function Pause() {
 	}
 }
 
+function Bullet() {
+	this.check = () => {
+		return this.x >= 0 && this.x < game_width && this.y >= 0 && this.y < height
+	}
+
+	this.update = () => {
+		this.x += this.x_speed * delta_time
+		this.y += this.y_speed * delta_time
+	}
+
+	this.draw = () => {
+		switch (this.type) {
+		case "circular":
+			c.beginPath()
+			c.arc(this.x, this.y, this.radius, 0, 360)
+			c.lineWidth = this.thickness
+			c.strokeStyle = this.border_color
+			c.fillStyle = this.fill_color
+			c.stroke()
+			c.fill()
+			break
+		case "square":
+			c.lineWidth = this.thickness
+			c.strokeStyle = this.border_color
+			c.fillStyle = this.fill_color
+			c.strokeRect(this.x - this.radius, this.y - this.radius, 2 * this.radius, 2 * this.radius)
+			c.fillRect(this.x - this.radius, this.y - this.radius, 2 * this.radius, 2 * this.radius)
+			break
+		}
+	}
+
+}
+
 function Player() {
 	this.x = 250
 	this.y = 500
 	this.border = 10
-	this.speed = 400
-	this.slow_speed = 200
+	this.speed = 500
+	this.slow_speed = 250
 	this.speedchange = -1
 	this.speedchange_timeout = 0.2
 	this.shift_status = false
+	this.shoot_status = false
+	this.shoot = 0
+	this.shoot_timeout = 0.1
+	this.bullets = []
+
+	this.update_bullet_array = () => {
+		if (!this.shoot_status)
+			this.bullets = []
+		else {
+			var arr = []
+			this.bullets.forEach((value) => {
+				value.update()
+				if (value.check()) arr.push(value)
+			})
+			if (this.shoot == 0) {
+				var b = new Bullet
+				b.x = this.x
+				b.y = this.y
+				b.x_speed = 0
+				b.y_speed = -800
+				b.type = "square"
+				b.radius = 8
+				b.thickness = 1
+				b.fill_color = "#f59d9d"
+				b.border_color = "#ff5757"
+				arr.push(b)
+			}
+			this.bullets = arr
+			this.shoot += delta_time
+			if (this.shoot >= this.shoot_timeout)
+				this.shoot = 0
+		}
+	}
+
+	this.draw_bullets = () => {
+		this.update_bullet_array()
+		this.bullets.forEach((value) => {value.draw()})
+	}
 
 	this.draw = () => {
 		c.beginPath()
@@ -158,7 +210,6 @@ function Player() {
 		c.lineWidth = 3
 		c.stroke()
 		c.fill()
-		
 		if (this.speedchange != -1) {
 			if (this.speedchange < this.speedchange_timeout / 2.0) 
 				var radius = this.speedchange / (this.speedchange_timeout / 2.0) * 20
@@ -169,9 +220,10 @@ function Player() {
 			c.lineWidth = 2
 			c.strokeStyle = "#a1a1a1"
 			c.stroke()
-			this.speedchange += 1.0 / fps
+			this.speedchange += delta_time
 			if (this.speedchange >= this.speedchange_timeout) this.speedchange = -1
 		}
+		this.draw_bullets()
 	}
 
 	this.limit_border = () => {
@@ -187,11 +239,12 @@ function Player() {
 			this.speedchange = 0
 		}
 		var current_speed = key_active.has("Shift") ? this.slow_speed : this.speed
-		if (key_active.has("ArrowLeft")) this.x -= current_speed / fps
-		if (key_active.has("ArrowRight")) this.x += current_speed / fps
-		if (key_active.has("ArrowUp")) this.y -= current_speed / fps
-		if (key_active.has("ArrowDown")) this.y += current_speed / fps
+		if (key_active.has("ArrowLeft")) this.x -= current_speed * delta_time
+		if (key_active.has("ArrowRight")) this.x += current_speed * delta_time
+		if (key_active.has("ArrowUp")) this.y -= current_speed * delta_time
+		if (key_active.has("ArrowDown")) this.y += current_speed * delta_time
 		this.limit_border()
+		this.shoot_status = key_active.has("z")
 	}
 }
 
@@ -205,7 +258,26 @@ function Game() {
 	this.y4 = 290
 	this.y5 = 450
 
-	this.reset = () => {
+	this.story = [
+		{
+			"stage": 1,
+			"stage_timeout": 1,
+			"midway": [
+				{
+				},
+				{}
+			],
+			"boss": []
+		},
+		{
+			"stage": 2,
+			"stage_timeout": 1,
+			"midway": [],
+			"boss": []
+		}
+	]
+
+	this.init = () => {
 		this.score = 0
 		this.power = 0
 		this.life = num_life
@@ -213,10 +285,11 @@ function Game() {
 		this.stage = 1
 		this.player = new Player
 	}
+	this.init()
 
 	this.process_key = () => {
 		if (key_last === "Escape") {
-			pause.reset()
+			pause = new Pause
 			state = "pause"
 		}
 		key_last = ""
@@ -270,7 +343,7 @@ function Result() {
 
 	this.process_key = () => {
 		if (key_last === "Escape") {
-			entrance.reset()
+			entrance = new Entrance
 			state = "entrance"
 		}
 		key_last = ""
@@ -289,6 +362,10 @@ function Result() {
 }
 
 function draw() {
+	var old_time = current_time
+	current_time = new Date()
+	delta_time = (current_time - old_time) / 1000.0
+
 	c.fillStyle = "black"
 	c.fillRect(0, 0, canvas.width, canvas.height)
 
@@ -307,9 +384,14 @@ function draw() {
 		break
 	}
 
-	window.setTimeout(function () {window.requestAnimationFrame(draw)}, time_interval)
+	counter++
+	c.fillStyle = "white"
+	c.font = "20px Verdana"
+	c.fillText(delta_time.toString(), 700, 550)
+	window.setTimeout(function () {window.requestAnimationFrame(draw)}, 1000.0 / fps)
 }
 
+counter = 0
 
 var canvas = document.getElementById("canvas")
 canvas.width = width, canvas.height = height
@@ -318,10 +400,9 @@ var c = canvas.getContext("2d")
 c.fillStyle = "black"
 c.fillRect(0, 0, canvas.width, canvas.height)
 
-var entrance = new Entrance
-var game = new Game
-var result = new Result
-var pause = new Pause
+var entrance, pause, game, result = new Result
 
 var state = "entrance"
+entrance = new Entrance
+current_time = new Date()
 draw()
