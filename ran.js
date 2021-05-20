@@ -22,22 +22,22 @@ var story = [
 			{
 				type: "single",
 				start_time: 1.0,
+				timeout: 10.0,
 				start_x: 100,
 				start_y: 100,
-				speed: 100,
-				health: 6,
+				speed: 300,
 				shape: "circle",
 				bullet_style: {
 					shape: "circle",
-					radius: 4, 
-					thickness: 1,
+					radius: 8, 
+					thickness: 5,
 					fill_color: "white",
 					border_color: "#ff5757"
-				}
+				},
+				time_interval: 1,
+				num: 5
 			}
-			
 		]
-		
 	}
 ]
 
@@ -56,10 +56,8 @@ window.onkeyup = (x) => {
 	console.log("keyup: " + st)
 }
 
-function Bullet(x, y, obj) {
+function Bullet(obj) {
 	Object.assign(this, obj)
-	this.x = x
-	this.y = y
 
 	this.check = () => {
 		return this.x >= 0 && this.x < game_width && this.y >= 0 && this.y < height
@@ -72,7 +70,7 @@ function Bullet(x, y, obj) {
 
 	this.draw = () => {
 		switch (this.shape) {
-		case "circular":
+		case "circle":
 			c.beginPath()
 			c.arc(this.x, this.y, this.radius, 0, 360)
 			c.lineWidth = this.thickness
@@ -115,7 +113,8 @@ function Bullet_array(bullet_style, time_interval, num) {
 	this.timer = new Timer(time_interval)
 	this.bullet_style = bullet_style
 
-	this.update = (x, y) => {
+	this.update = (delta_obj) => {
+		this.timer.update()
 		var arr = []
 		this.bullets.forEach((value) => {
 			value.update()
@@ -125,19 +124,19 @@ function Bullet_array(bullet_style, time_interval, num) {
 		if (this.timer.expire() && (num > 0 || num === -1)) {
 			this.timer.reset()
 			if (num !== -1) num--
-			arr.push(new Bullet(x, y, this.bullet_style))
+			arr.push(new Bullet(Object.assign(delta_obj, this.bullet_style)))
+			console.log("ADD ELEM")
 		}
 
 		this.bullets = arr
-		this.timer.update()
 	}
 
 	this.reset = () => {
 		this.bullets = []
 	}
 
-	this.draw = (x, y) => {
-		this.update(x, y)
+	this.draw = (delta_obj) => {
+		this.update(delta_obj)
 		this.bullets.forEach((value) => {value.draw()})
 	}
 }
@@ -145,6 +144,7 @@ function Bullet_array(bullet_style, time_interval, num) {
 function Player() {
 	this.x = 250
 	this.y = 500
+	this.radius = 6
 	this.border = 10
 	this.speed = 500
 	this.slow_speed = 250
@@ -154,8 +154,6 @@ function Player() {
 	this.shoot_status = false
 
 	this.bullet_style = {
-		x_speed: 0,
-		y_speed: -1500,
 		shape: "square",
 		radius: 8,
 		thickness: 1,
@@ -182,7 +180,7 @@ function Player() {
 		this.update()
 
 		c.beginPath()
-		c.arc(this.x, this.y, 5, 0, 360)
+		c.arc(this.x, this.y, this.radius, 0, 360)
 		c.fillStyle = "white"
 		c.strokeStyle = "black"
 		c.lineWidth = 3
@@ -193,7 +191,7 @@ function Player() {
 			if (this.speedchange.expire()) this.speedchange = null
 		}
 		if (this.shoot_status) 
-			this.bullet_array.draw(this.x, this.y - 20)
+			this.bullet_array.draw({x: this.x, y: this.y - 20, x_speed: 0, y_speed: -1500})
 		else
 			this.bullet_array.reset()
 	}
@@ -252,12 +250,8 @@ function Arena_text(obj) {
 	Object.assign(this, obj)
 	this.timer = new Timer(this.timeout)
 
-	this.update = () => {
-		this.timer.update()
-	}
-
 	this.draw = () => {
-		this.update()
+		this.timer.update()
 		c.fillStyle = this.color
 		c.font = "30px Verdana"
 		c.fillText(this.text, this.x, this.y)
@@ -269,13 +263,37 @@ function Arena_text(obj) {
 
 }
 
-function Arena_game(obj) {
+function Enemy(obj) {
 	Object.assign(this, obj)
-	this.player = new Player
-	this.enemy = []
+	this.timer = new Timer
+
+	this.x = this.start_x
+	this.y = this.start_y
+	this.bullet_array = new Bullet_array(this.bullet_style, this.time_interval, this.num)
 
 	this.draw = () => {
-		this.player.draw()
+		this.bullet_array.draw({x: this.x, y: this.y, x_speed: 0, y_speed: this.speed})
+	}
+
+}
+
+function Arena_game(obj) {
+	Object.assign(this, obj)
+	player = new Player
+	this.timer = new Timer
+	this.enemy_active = new Map
+
+	this.draw = () => {
+		this.timer.update()
+		player.draw()
+		this.enemy.forEach((value, index) => {
+			if (this.timer.time >= value.start_time && !this.enemy_active.has(index)) {
+				this.enemy_active.set(index, new Enemy(value))
+			}
+		})
+		this.enemy_active.forEach((value) => {
+			value.draw()
+		})
 	}
 
 	this.expire = () => {
@@ -323,9 +341,9 @@ function Game() {
 		if (this.arena.expire()) {
 			this.cnt++
 			if (story[this.cnt].type === "text")
-				this.arena = new Arena_text
+				this.arena = new Arena_text(story[this.cnt])
 			else if (story[this.cnt].type === "game")
-				this.arena = new Arena_game
+				this.arena = new Arena_game(story[this.cnt])
 		}
 	}
 
@@ -522,7 +540,7 @@ var c = canvas.getContext("2d")
 c.fillStyle = "black"
 c.fillRect(0, 0, canvas.width, canvas.height)
 
-var entrance, pause, game, result = new Result
+var entrance, pause, game, player, result = new Result
 
 var state = "entrance"
 entrance = new Entrance
