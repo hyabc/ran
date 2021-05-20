@@ -56,7 +56,8 @@ window.onkeyup = (x) => {
 	console.log("keyup: " + st)
 }
 
-function Bullet(x, y) {
+function Bullet(x, y, obj) {
+	Object.assign(this, obj)
 	this.x = x
 	this.y = y
 
@@ -109,6 +110,39 @@ function Timer(timeout) {
 	}
 }
 
+function Bullet_array(bullet_style, x, y, time_interval, num) {
+	this.bullets = []
+	this.timer = new Timer(time_interval)
+	this.bullet_style = bullet_style
+	this.x = x
+	this.y = y
+	this.update = () => {
+		var arr = []
+		this.bullets.forEach((value) => {
+			value.update()
+			if (value.check())
+				arr.push(value)
+		})
+		if (this.timer.expire() && (num > 0 || num === -1)) {
+			this.timer.reset()
+			if (num !== -1) num--
+			arr.push(new Bullet(this.x, this.y, this.bullet_style))
+		}
+
+		this.bullets = arr
+		this.timer.update()
+	}
+
+	this.reset = () => {
+		this.bullets = []
+	}
+
+	this.draw = () => {
+		this.update()
+		this.bullets.forEach((value) => {value.draw()})
+	}
+}
+
 function Player() {
 	this.x = 250
 	this.y = 500
@@ -118,9 +152,7 @@ function Player() {
 	this.speedchange = null
 	this.speedchange_timeout = 0.2
 	this.shift_status = false
-	this.shoot = new Timer(0.05)
 	this.shoot_status = false
-	this.bullets = []
 
 	this.bullet_style = {
 		x_speed: 0,
@@ -131,34 +163,20 @@ function Player() {
 		fill_color: "#f59d9d",
 		border_color: "#ff5757"
 	}
-
-	this.update_bullet_array = () => {
-		if (!this.shoot_status)
-			this.bullets = []
-		else {
-			var arr = []
-			this.bullets.forEach((value) => {
-				value.update()
-				if (value.check())
-					arr.push(value)
-			})
-			if (this.shoot.expire()) {
-				this.shoot.reset()
-				arr.push(Object.assign(new Bullet(this.x, this.y - 20), this.bullet_style))
-			}
-
-			this.bullets = arr
-			this.shoot.update()
-		}
-	}
-
-	this.draw_bullets = () => {
-		this.update_bullet_array()
-		this.bullets.forEach((value) => {value.draw()})
-	}
+	this.bullet_array = new Bullet_array(this.bullet_style, this.x, this.y - 20, 0.05, -1)
 
 	this.update = () => {
 		this.process_key()
+	}
+
+	this.draw_speedchange = () => {
+		this.speedchange.update()
+		var radius = Math.min(this.speedchange.time, this.speedchange_timeout - this.speedchange.time) / (this.speedchange_timeout / 2.0) * 20
+		c.beginPath()
+		c.arc(this.x, this.y, radius + 5, 0, 360)
+		c.lineWidth = 2
+		c.strokeStyle = "#a1a1a1"
+		c.stroke()
 	}
 
 	this.draw = () => {
@@ -172,16 +190,15 @@ function Player() {
 		c.stroke()
 		c.fill()
 		if (this.speedchange !== null) {
-			var radius = Math.min(this.speedchange.time, this.speedchange_timeout - this.speedchange.time) / (this.speedchange_timeout / 2.0) * 20
-			c.beginPath()
-			c.arc(this.x, this.y, radius + 5, 0, 360)
-			c.lineWidth = 2
-			c.strokeStyle = "#a1a1a1"
-			c.stroke()
-			this.speedchange.update()
+			this.draw_speedchange()
 			if (this.speedchange.expire()) this.speedchange = null
 		}
-		this.draw_bullets()
+		if (this.shoot_status) {
+			this.bullet_array.x = this.x
+			this.bullet_array.y = this.y - 20
+			this.bullet_array.draw()
+		} else
+			this.bullet_array.reset()
 	}
 
 	this.limit_border = () => {
@@ -197,12 +214,39 @@ function Player() {
 			this.speedchange = new Timer(this.speedchange_timeout)
 		}
 		var current_speed = key_active.has("Shift") ? this.slow_speed : this.speed
-		if (key_active.has("ArrowLeft")) this.x -= current_speed * delta_time
-		if (key_active.has("ArrowRight")) this.x += current_speed * delta_time
-		if (key_active.has("ArrowUp")) this.y -= current_speed * delta_time
-		if (key_active.has("ArrowDown")) this.y += current_speed * delta_time
+		var mask = (key_active.has("ArrowLeft") ? 8 : 0) | (key_active.has("ArrowRight") ? 4 : 0) |
+			(key_active.has("ArrowUp") ? 2 : 0) | (key_active.has("ArrowDown") ? 1 : 0)
+		switch (mask) {
+			case 8:
+				this.x -= current_speed * delta_time
+				break
+			case 4:
+				this.x += current_speed * delta_time
+				break
+			case 2:
+				this.y -= current_speed * delta_time
+				break
+			case 1: 
+				this.y += current_speed * delta_time
+				break
+			case 10:
+				this.x -= current_speed * delta_time / 1.414
+				this.y -= current_speed * delta_time / 1.414
+				break
+			case 9: 
+				this.x -= current_speed * delta_time / 1.414
+				this.y += current_speed * delta_time / 1.414
+				break
+			case 6:
+				this.x += current_speed * delta_time / 1.414
+				this.y -= current_speed * delta_time / 1.414
+				break
+			case 5:
+				this.x += current_speed * delta_time / 1.414
+				this.y += current_speed * delta_time / 1.414
+				break
+		}
 		this.limit_border()
-
 		this.shoot_status = key_active.has("z")
 	}
 }
@@ -274,7 +318,7 @@ function Game() {
 		this.process_key()
 	}
 
-	this.left_draw = () => {
+	this.draw_left = () => {
 		c.fillStyle = "#0133a0"
 		c.fillRect(0, 0, game_width, canvas.height)
 
@@ -288,7 +332,7 @@ function Game() {
 		}
 	}
 
-	this.right_draw = () => {
+	this.draw_right = () => {
 		c.fillStyle = "black"
 		c.fillRect(game_width, 0, canvas.width, canvas.height)
 
@@ -315,8 +359,8 @@ function Game() {
 
 	this.draw = () => {
 		this.update()
-		this.left_draw()
-		this.right_draw()
+		this.draw_left()
+		this.draw_right()
 	}
 }
 
