@@ -110,13 +110,12 @@ function Timer(timeout) {
 	}
 }
 
-function Bullet_array(bullet_style, x, y, time_interval, num) {
+function Bullet_array(bullet_style, time_interval, num) {
 	this.bullets = []
 	this.timer = new Timer(time_interval)
 	this.bullet_style = bullet_style
-	this.x = x
-	this.y = y
-	this.update = () => {
+
+	this.update = (x, y) => {
 		var arr = []
 		this.bullets.forEach((value) => {
 			value.update()
@@ -126,7 +125,7 @@ function Bullet_array(bullet_style, x, y, time_interval, num) {
 		if (this.timer.expire() && (num > 0 || num === -1)) {
 			this.timer.reset()
 			if (num !== -1) num--
-			arr.push(new Bullet(this.x, this.y, this.bullet_style))
+			arr.push(new Bullet(x, y, this.bullet_style))
 		}
 
 		this.bullets = arr
@@ -137,8 +136,8 @@ function Bullet_array(bullet_style, x, y, time_interval, num) {
 		this.bullets = []
 	}
 
-	this.draw = () => {
-		this.update()
+	this.draw = (x, y) => {
+		this.update(x, y)
 		this.bullets.forEach((value) => {value.draw()})
 	}
 }
@@ -163,7 +162,7 @@ function Player() {
 		fill_color: "#f59d9d",
 		border_color: "#ff5757"
 	}
-	this.bullet_array = new Bullet_array(this.bullet_style, this.x, this.y - 20, 0.05, -1)
+	this.bullet_array = new Bullet_array(this.bullet_style, 0.05, -1)
 
 	this.update = () => {
 		this.process_key()
@@ -193,11 +192,9 @@ function Player() {
 			this.draw_speedchange()
 			if (this.speedchange.expire()) this.speedchange = null
 		}
-		if (this.shoot_status) {
-			this.bullet_array.x = this.x
-			this.bullet_array.y = this.y - 20
-			this.bullet_array.draw()
-		} else
+		if (this.shoot_status) 
+			this.bullet_array.draw(this.x, this.y - 20)
+		else
 			this.bullet_array.reset()
 	}
 
