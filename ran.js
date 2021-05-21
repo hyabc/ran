@@ -3,10 +3,10 @@ var game_width = 500
 var fps = 120
 var num_life = 3
 var num_bomb = 3
+var judge_distance = 5
 var title = "Project Ran"
-var key_last = "", key_active = new Set
-var delta_time, current_time, counter
-var judge_distance = 20
+
+var key_last = "", key_active = new Set, isloaded = false
 
 var story = [
 	{
@@ -29,10 +29,7 @@ var story = [
 				self_style: {
 					type: "image",
 					image_id: "huaji",
-					radius: 20
-/*					thickness: 10,
-					fill_color: "white",
-					border_color: "blue"*/
+					radius: 30
 				},
 				bullet_speed: 500,
 				bullet_array_style: {
@@ -92,6 +89,10 @@ window.onkeyup = (x) => {
 	if (st.length === 1 && 'A' <= st[0] && st[0] <= 'Z') st = st.toLowerCase()
 	key_active.delete(st)
 	console.log("keyup: " + st)
+}
+
+window.onload = () => {
+	isloaded = true
 }
 
 function Shape(obj) {
@@ -371,6 +372,10 @@ function Game() {
 
 	this.update = () => {
 		this.process_key()
+		if (!isloaded) {
+			loading = new Loading
+			state = "loading"
+		}
 	}
 
 	this.draw_left = () => {
@@ -541,6 +546,23 @@ function Pause() {
 	}
 }
 
+function Loading() {
+	this.title_x = 200, this.title_y = 300
+
+	this.update = () => {
+		if (isloaded) {
+			state = "game"
+		}
+	}
+
+	this.draw = () => {
+		this.update()
+		c.fillStyle = "white"
+		c.font = "40px Verdana"
+		c.fillText("Loading, Please wait", this.title_x, this.title_y)
+	}
+}
+
 function draw() {
 	var old_time = current_time
 	current_time = new Date()
@@ -562,6 +584,9 @@ function draw() {
 	case "pause": 
 		pause.draw()
 		break
+	case "loading":
+		loading.draw()
+		break
 	}
 
 	counter++
@@ -571,18 +596,14 @@ function draw() {
 	window.setTimeout(function () {window.requestAnimationFrame(draw)}, 1000.0 / fps)
 }
 
-counter = 0
-
 var canvas = document.getElementById("canvas")
 canvas.width = width, canvas.height = height
-
 var c = canvas.getContext("2d")
 c.fillStyle = "black"
 c.fillRect(0, 0, canvas.width, canvas.height)
 
-var entrance, pause, game, player, result = new Result
-
 var state = "entrance"
-entrance = new Entrance
-current_time = new Date()
+var entrance = new Entrance, pause, loading, game, player, result = new Result
+
+var delta_time, current_time = new Date(), counter = 0
 draw()
