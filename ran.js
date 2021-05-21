@@ -27,7 +27,12 @@ var story = [
 				start_x: 100,
 				start_y: 100,
 				self_style: {
-					shape: "image"
+					type: "image",
+					image_id: "huaji",
+					radius: 20
+/*					thickness: 10,
+					fill_color: "white",
+					border_color: "blue"*/
 				},
 				bullet_speed: 500,
 				bullet_array_style: {
@@ -119,6 +124,9 @@ function Shape(obj) {
 			c.strokeRect(this.x - this.radius, this.y - this.radius, 2 * this.radius, 2 * this.radius)
 			c.fillRect(this.x - this.radius, this.y - this.radius, 2 * this.radius, 2 * this.radius)
 			break
+		case "image":
+			var img = document.getElementById(this.image_id)
+			c.drawImage(img, this.x - this.radius, this.y - this.radius, 2 * this.radius, 2 * this.radius)
 		}
 	}
 
@@ -283,27 +291,28 @@ function Arena_text(obj) {
 function Enemy(obj) {
 	Object.assign(this, obj)
 	this.timer = new Timer
-
-	this.x = this.start_x
-	this.y = this.start_y
+	this.shape = new Shape(this.self_style)
+	this.shape.x = this.start_x
+	this.shape.y = this.start_y
 	this.bullet_array = new Bullet_array(this.bullet_array_style)
-	this.shape = new Shape
+
 
 	this.expire = () => {
 		return false
 	}
 
 	this.draw = () => {
+		this.shape.draw()
 		switch (this.type) {
 		case "single":
-			var dist = Math.sqrt((this.x - player.shape.x) * (this.x - player.shape.x) + (this.y - player.shape.y) * (this.y - player.shape.y))
+			var dist = Math.sqrt((this.shape.x - player.shape.x) * (this.shape.x - player.shape.x) + (this.shape.y - player.shape.y) * (this.shape.y - player.shape.y))
 			if (dist >= judge_distance) {
-				var x_speed = this.bullet_speed / dist * (player.shape.x - this.x)
-				var y_speed = this.bullet_speed / dist * (player.shape.y - this.y)
+				var x_speed = this.bullet_speed / dist * (player.shape.x - this.shape.x)
+				var y_speed = this.bullet_speed / dist * (player.shape.y - this.shape.y)
 			}
 			break
 		}
-		this.bullet_array.draw({x: this.x, y: this.y, x_speed: x_speed, y_speed: y_speed})
+		this.bullet_array.draw({x: this.shape.x, y: this.shape.y, x_speed: x_speed, y_speed: y_speed})
 	}
 
 }
