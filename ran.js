@@ -6,6 +6,7 @@ var num_bomb = 3
 var title = "Project Ran"
 var key_last = "", key_active = new Set
 var delta_time, current_time, counter
+var judge_distance = 20
 
 var story = [
 	{
@@ -21,25 +22,57 @@ var story = [
 		enemy: [
 			{
 				type: "single",
-				start_time: 1.0,
+				start_time: 0.5,
 				timeout: 10.0,
 				start_x: 100,
 				start_y: 100,
-				speed: 300,
-				shape: "circle",
-				bullet_style: {
-					shape: "circle",
-					radius: 8, 
-					thickness: 5,
-					fill_color: "white",
-					border_color: "#ff5757"
+				self_style: {
+					shape: "image"
 				},
-				time_interval: 1,
-				num: 5
+				bullet_speed: 500,
+				bullet_array_style: {
+					bullet_style: {
+						type: "circle",
+						radius: 8, 
+						thickness: 5,
+						fill_color: "white",
+						border_color: "#ff5757"
+					},
+					bullet_time_interval: 0.3,
+					bullet_num: 20
+				},
 			}
 		]
 	}
 ]
+
+var player_style = {
+	start_x: 250,
+	start_y: 500,
+	speed: 500,
+	slow_speed: 250,
+	speedchange_timeout: 0.2,
+	border: 20,
+	self_style: {
+		type: "circle",
+		radius: 6,
+		thickness: 2,
+		fill_color: "white",
+		border_color: "black"
+	}, 
+	bullet_speed: 1500,
+	bullet_array_style: {
+		bullet_style: {
+			type: "square",
+			radius: 8,
+			thickness: 1,
+			fill_color: "#f59d9d",
+			border_color: "#ff5757"
+		},
+		bullet_time_interval: 0.05,
+		bullet_num: -1
+	}
+}
 
 window.onkeydown = (x) => {
 	var st = x.key
@@ -56,7 +89,7 @@ window.onkeyup = (x) => {
 	console.log("keyup: " + st)
 }
 
-function Bullet(obj) {
+function Shape(obj) {
 	Object.assign(this, obj)
 
 	this.check = () => {
@@ -69,7 +102,7 @@ function Bullet(obj) {
 	}
 
 	this.draw = () => {
-		switch (this.shape) {
+		switch (this.type) {
 		case "circle":
 			c.beginPath()
 			c.arc(this.x, this.y, this.radius, 0, 360)
@@ -108,10 +141,11 @@ function Timer(timeout) {
 	}
 }
 
-function Bullet_array(bullet_style, time_interval, num) {
+function Bullet_array(obj) {
+	Object.assign(this, obj)
 	this.bullets = []
-	this.timer = new Timer(time_interval)
-	this.bullet_style = bullet_style
+	this.timer = new Timer(this.bullet_time_interval)
+	this.num = this.bullet_num
 
 	this.update = (delta_obj) => {
 		this.timer.update()
@@ -121,11 +155,10 @@ function Bullet_array(bullet_style, time_interval, num) {
 			if (value.check())
 				arr.push(value)
 		})
-		if (this.timer.expire() && (num > 0 || num === -1)) {
+		if (this.timer.expire() && (this.num > 0 || this.num === -1)) {
 			this.timer.reset()
-			if (num !== -1) num--
-			arr.push(new Bullet(Object.assign(delta_obj, this.bullet_style)))
-			console.log("ADD ELEM")
+			if (this.num !== -1) this.num--
+			arr.push(new Shape(Object.assign(delta_obj, this.bullet_style)))
 		}
 
 		this.bullets = arr
@@ -142,25 +175,15 @@ function Bullet_array(bullet_style, time_interval, num) {
 }
 
 function Player() {
-	this.x = 250
-	this.y = 500
-	this.radius = 6
-	this.border = 10
-	this.speed = 500
-	this.slow_speed = 250
-	this.speedchange = null
-	this.speedchange_timeout = 0.2
+	Object.assign(this, player_style)
+	this.speedchange = new Timer(this.speedchange_timeout)
+	this.speedchange.time = -1
 	this.shift_status = false
 	this.shoot_status = false
-
-	this.bullet_style = {
-		shape: "square",
-		radius: 8,
-		thickness: 1,
-		fill_color: "#f59d9d",
-		border_color: "#ff5757"
-	}
-	this.bullet_array = new Bullet_array(this.bullet_style, 0.05, -1)
+	this.shape = new Shape(this.self_style)
+	this.shape.x = this.start_x
+	this.shape.y = this.start_y
+	this.bullet_array = new Bullet_array(this.bullet_array_style)
 
 	this.update = () => {
 		this.process_key()
@@ -170,7 +193,7 @@ function Player() {
 		this.speedchange.update()
 		var radius = Math.min(this.speedchange.time, this.speedchange_timeout - this.speedchange.time) / (this.speedchange_timeout / 2.0) * 20
 		c.beginPath()
-		c.arc(this.x, this.y, radius + 5, 0, 360)
+		c.arc(this.shape.x, this.shape.y, radius + 5, 0, 360)
 		c.lineWidth = 2
 		c.strokeStyle = "#a1a1a1"
 		c.stroke()
@@ -179,66 +202,60 @@ function Player() {
 	this.draw = () => {
 		this.update()
 
-		c.beginPath()
-		c.arc(this.x, this.y, this.radius, 0, 360)
-		c.fillStyle = "white"
-		c.strokeStyle = "black"
-		c.lineWidth = 3
-		c.stroke()
-		c.fill()
-		if (this.speedchange !== null) {
+		this.shape.draw()
+		if (this.speedchange.time !== -1) {
 			this.draw_speedchange()
-			if (this.speedchange.expire()) this.speedchange = null
+			if (this.speedchange.expire()) this.speedchange.time = -1
 		}
 		if (this.shoot_status) 
-			this.bullet_array.draw({x: this.x, y: this.y - 20, x_speed: 0, y_speed: -1500})
+			this.bullet_array.draw({x: this.shape.x, y: this.shape.y - 20, x_speed: 0, y_speed: -this.bullet_speed})
 		else
 			this.bullet_array.reset()
 	}
 
 	this.limit_border = () => {
-		if (this.x < this.border) this.x = this.border
-		if (this.x > game_width - this.border) this.x = game_width - this.border
-		if (this.y < this.border) this.y = this.border
-		if (this.y > height - this.border) this.y = height - this.border
+		this.shape.x = Math.max(this.shape.x, this.border)
+		this.shape.y = Math.max(this.shape.y, this.border)
+		this.shape.x = Math.min(this.shape.x, game_width - this.border)
+		this.shape.y = Math.min(this.shape.y, height - this.border)
 	}
 
 	this.process_key = () => {
 		if (key_active.has("Shift") !== this.shift_status) {
 			this.shift_status = key_active.has("Shift")
-			this.speedchange = new Timer(this.speedchange_timeout)
+			this.speedchange.reset()
 		}
 		var current_speed = key_active.has("Shift") ? this.slow_speed : this.speed
 		var mask = (key_active.has("ArrowLeft") ? 8 : 0) | (key_active.has("ArrowRight") ? 4 : 0) |
 			(key_active.has("ArrowUp") ? 2 : 0) | (key_active.has("ArrowDown") ? 1 : 0)
 		switch (mask) {
 			case 8:
-				this.x -= current_speed * delta_time
+				this.shape.x -= current_speed * delta_time
 				break
 			case 4:
-				this.x += current_speed * delta_time
+				this.shape.x += current_speed * delta_time
 				break
 			case 2:
-				this.y -= current_speed * delta_time
+				this.shape.y -= current_speed * delta_time
 				break
 			case 1: 
-				this.y += current_speed * delta_time
+				this.shape.y += current_speed * delta_time
 				break
 			case 10:
-				this.x -= current_speed * delta_time / 1.414
-				this.y -= current_speed * delta_time / 1.414
+				this.shape.x -= current_speed * delta_time / 1.414
+				this.shape.y -= current_speed * delta_time / 1.414
 				break
 			case 9: 
-				this.x -= current_speed * delta_time / 1.414
-				this.y += current_speed * delta_time / 1.414
+				this.shape.x -= current_speed * delta_time / 1.414
+				this.shape.y += current_speed * delta_time / 1.414
 				break
 			case 6:
-				this.x += current_speed * delta_time / 1.414
-				this.y -= current_speed * delta_time / 1.414
+				this.shape.x += current_speed * delta_time / 1.414
+				this.shape.y -= current_speed * delta_time / 1.414
 				break
 			case 5:
-				this.x += current_speed * delta_time / 1.414
-				this.y += current_speed * delta_time / 1.414
+				this.shape.x += current_speed * delta_time / 1.414
+				this.shape.y += current_speed * delta_time / 1.414
 				break
 		}
 		this.limit_border()
@@ -269,10 +286,24 @@ function Enemy(obj) {
 
 	this.x = this.start_x
 	this.y = this.start_y
-	this.bullet_array = new Bullet_array(this.bullet_style, this.time_interval, this.num)
+	this.bullet_array = new Bullet_array(this.bullet_array_style)
+	this.shape = new Shape
+
+	this.expire = () => {
+		return false
+	}
 
 	this.draw = () => {
-		this.bullet_array.draw({x: this.x, y: this.y, x_speed: 0, y_speed: this.speed})
+		switch (this.type) {
+		case "single":
+			var dist = Math.sqrt((this.x - player.shape.x) * (this.x - player.shape.x) + (this.y - player.shape.y) * (this.y - player.shape.y))
+			if (dist >= judge_distance) {
+				var x_speed = this.bullet_speed / dist * (player.shape.x - this.x)
+				var y_speed = this.bullet_speed / dist * (player.shape.y - this.y)
+			}
+			break
+		}
+		this.bullet_array.draw({x: this.x, y: this.y, x_speed: x_speed, y_speed: y_speed})
 	}
 
 }
@@ -292,7 +323,7 @@ function Arena_game(obj) {
 			}
 		})
 		this.enemy_active.forEach((value) => {
-			value.draw()
+			if (!value.expire()) value.draw()
 		})
 	}
 
