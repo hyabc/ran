@@ -258,6 +258,14 @@ function Timer(timeout) {
 	this.reset = () => {
 		this.time = 0
 	}
+
+	this.disable = () => {
+		this.time = -1
+	}
+	
+	this.active = () => {
+		return this.time !== -1
+	}
 }
 
 function Bullet_array(obj) {
@@ -321,10 +329,10 @@ function Player() {
 		this.update()
 
 		this.shape.draw()
-		if (this.speedchange.time !== -1) {
+		if (this.speedchange.active()) {
 			this.draw_speedchange()
 			this.speedchange.update()
-			if (this.speedchange.expire()) this.speedchange.time = -1
+			if (this.speedchange.expire()) this.speedchange.disable()
 		}
 		if (this.shoot_status) 
 			this.bullet_array.draw({x: this.shape.x, y: this.shape.y - 20, x_speed: 0, y_speed: -this.bullet_speed})
@@ -451,8 +459,10 @@ function Arena_game(obj) {
 	this.player = new Player
 	this.timer = new Timer
 	this.enemy_active = new Map
-	this.restart_timer = new Timer(1.0)
-	this.restart_timer.time = -1
+	this.restart_timer = new Timer(2.0)
+	this.restart_timer.disable()
+	this.bomb_timer = new Timer(1.0)
+	this.bomb_timer.disable()
 
 	this.clear_bullets = () => {
 		this.enemy_active.forEach((enemy) => {
@@ -471,22 +481,40 @@ function Arena_game(obj) {
 				enemy.bullet_array.bullets.forEach((enemy_bullet) => {
 					if (distance(this.player.shape.x - enemy_bullet.x, this.player.shape.y - enemy_bullet.y) < this.player.shape.radius + enemy_bullet.radius) {
 						game.life--
+						game.bomb = num_bomb
 						this.restart_timer.reset()
 						this.player = new Player
 					}
 				})
 			}
 		})
-		if (this.restart_timer.time !== -1) {
-			this.clear_bullets()
-			this.restart_timer.update()
-			if (this.restart_timer.expire()) this.restart_timer.time = -1
+	}
+
+	this.process_key = () => {
+		if (key_last === "x") {
+			if (game.bomb > 0) {
+				game.bomb--
+				this.clear_bullets()
+				this.bomb_timer.reset()
+			}
+			key_last = ""
 		}
 	}
 
 	this.update = () => {
+		this.process_key()
 		this.timer.update()
 		this.judge()
+		if (this.restart_timer.active()) {
+			this.clear_bullets()
+			this.restart_timer.update()
+			if (this.restart_timer.expire()) this.restart_timer.disable()
+		}
+		if (this.bomb_timer.active()) {
+			this.clear_bullets()
+			this.bomb_timer.update()
+			if (this.bomb_timer.expire()) this.bomb_timer.disable()
+		}
 	}
 
 	this.draw = () => {
@@ -531,8 +559,8 @@ function Game() {
 		if (key_last === "Escape") {
 			pause = new Pause
 			state = "pause"
+			key_last = ""
 		}
-		key_last = ""
 	}
 
 	this.update = () => {
@@ -596,8 +624,8 @@ function Result() {
 		if (key_last === "Escape") {
 			entrance = new Entrance
 			state = "entrance"
+			key_last = ""
 		}
-		key_last = ""
 	}
 
 	this.update = () => {
