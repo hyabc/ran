@@ -62,15 +62,20 @@ var story = [
 		enemy: [
 			{
 				type: "single",
-				start_time: 0.5,
+				start_time: 1.0,
 				start_x: 100,
 				start_y: 100,
 				start_health: 10.0,
-				health_decrease: 1.0,
+				health_decrease_time: 1.0,
 				self_style: {
 					type: "image",
 					image_id: "huaji",
 					radius: 30
+				},
+				movement: {
+					type: "simple", 
+					x_speed: 0,
+					y_speed: 150
 				},
 				bullet_speed: 500,
 				bullet_array_style: {
@@ -81,9 +86,69 @@ var story = [
 						fill_color: "white",
 						border_color: "#ff5757"
 					},
-					bullet_time_interval: 0.2,
-					bullet_num: 20
+					bullet_time_interval: 0.5,
+					bullet_num: 5
+				}
+			},
+			{
+				type: "single",
+				start_time: 2.0,
+				start_x: 100,
+				start_y: 100,
+				start_health: 10.0,
+				health_decrease_time: 1.0,
+				self_style: {
+					type: "image",
+					image_id: "huaji",
+					radius: 30
 				},
+				movement: {
+					type: "simple", 
+					x_speed: 0,
+					y_speed: 150
+				},
+				bullet_speed: 500,
+				bullet_array_style: {
+					bullet_style: {
+						type: "circle",
+						radius: 8, 
+						thickness: 5,
+						fill_color: "white",
+						border_color: "#ff5757"
+					},
+					bullet_time_interval: 0.5,
+					bullet_num: 5
+				}
+			},
+			{
+				type: "single",
+				start_time: 3.0,
+				start_x: 100,
+				start_y: 100,
+				start_health: 10.0,
+				health_decrease_time: 1.0,
+				self_style: {
+					type: "image",
+					image_id: "huaji",
+					radius: 30
+				},
+				movement: {
+					type: "simple", 
+					x_speed: 0,
+					y_speed: 150
+				},
+				bullet_speed: 500,
+				bullet_array_style: {
+					bullet_style: {
+						type: "circle",
+						radius: 8, 
+						thickness: 5,
+						fill_color: "white",
+						border_color: "#ff5757"
+					},
+					bullet_time_interval: 0.5,
+					bullet_num: 5
+				}
 			}
 		]
 	}
@@ -339,13 +404,19 @@ function Enemy(obj) {
 	this.health = this.start_health
 	this.bullet_array = new Bullet_array(this.bullet_array_style)
 
-
 	this.expire = () => {
 		return this.health < 0
 	}
 
 	this.update = () => {
-		this.health -= delta_time * this.health_decrease
+		this.health -= delta_time * this.health_decrease_time
+		switch (this.movement.type) {
+		case "simple":
+			this.shape.x_speed = this.movement.x_speed
+			this.shape.y_speed = this.movement.y_speed
+			this.shape.update()
+			break
+		}
 	}
 
 	this.draw = () => {
