@@ -77,7 +77,7 @@ var story = [
 					x_speed: 0,
 					y_speed: 150
 				},
-				bullet_speed: 500,
+				bullet_speed: 300,
 				bullet_array_style: {
 					bullet_style: {
 						type: "circle",
@@ -108,7 +108,7 @@ var story = [
 					x_speed: 0,
 					y_speed: 150
 				},
-				bullet_speed: 500,
+				bullet_speed: 300,
 				bullet_array_style: {
 					bullet_style: {
 						type: "circle",
@@ -139,7 +139,7 @@ var story = [
 					x_speed: 0,
 					y_speed: 150
 				},
-				bullet_speed: 500,
+				bullet_speed: 300,
 				bullet_array_style: {
 					bullet_style: {
 						type: "circle",
@@ -274,7 +274,7 @@ function Bullet_array(obj) {
 	this.timer = new Timer(this.bullet_time_interval)
 	this.num = this.bullet_num
 
-	this.update = (delta_obj) => {
+	this.update = () => {
 		this.timer.update()
 		var arr = []
 		this.bullets.forEach((value) => {
@@ -282,21 +282,23 @@ function Bullet_array(obj) {
 			if (value.check())
 				arr.push(value)
 		})
-		if (delta_obj !== undefined && this.timer.expire() && (this.num > 0 || this.num === -1)) {
+		this.bullets = arr
+	}
+
+	this.add = (delta_obj) => {
+		if (this.timer.expire() && (this.num > 0 || this.num === -1)) {
 			this.timer.reset()
 			if (this.num !== -1) this.num--
-			arr.push(new Shape(Object.assign(delta_obj, this.bullet_style)))
+			this.bullets.push(new Shape(Object.assign(delta_obj, this.bullet_style)))
 		}
-
-		this.bullets = arr
 	}
 
 	this.reset = () => {
 		this.bullets = []
 	}
 
-	this.draw = (delta_obj) => {
-		this.update(delta_obj)
+	this.draw = () => {
+		this.update()
 		this.bullets.forEach((value) => {value.draw()})
 	}
 }
@@ -334,9 +336,10 @@ function Player() {
 			this.speedchange.update()
 			if (this.speedchange.expire()) this.speedchange.disable()
 		}
-		if (this.shoot_status) 
-			this.bullet_array.draw({x: this.shape.x, y: this.shape.y - 20, x_speed: 0, y_speed: -this.bullet_speed})
-		else
+		if (this.shoot_status) {
+			this.bullet_array.add({x: this.shape.x, y: this.shape.y - 10, x_speed: 0, y_speed: -this.bullet_speed})
+			this.bullet_array.draw()
+		} else
 			this.bullet_array.reset()
 	}
 
@@ -447,9 +450,9 @@ function Enemy(obj) {
 		}
 		if (!this.expire()) {
 			this.shape.draw()
-			this.bullet_array.draw({x: this.shape.x, y: this.shape.y, x_speed: x_speed, y_speed: y_speed})
-		} else 
-			this.bullet_array.draw()
+			this.bullet_array.add({x: this.shape.x, y: this.shape.y, x_speed: x_speed, y_speed: y_speed})
+		}
+		this.bullet_array.draw()
 	}
 
 }
