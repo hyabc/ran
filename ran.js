@@ -3,7 +3,6 @@ var game_width = 500
 var fps = 120
 var num_life = 3
 var num_bomb = 3
-var judge_distance = 5
 var title = "Project Ran"
 
 var key_last = "", key_active = new Set, isloaded = false
@@ -64,9 +63,10 @@ var story = [
 				type: "single",
 				start_time: 1.0,
 				start_x: 100,
-				start_y: 100,
+				start_y: 50,
 				start_health: 10.0,
 				health_decrease_time: 1.0,
+				health_decrease_bullet: 0.5,
 				self_style: {
 					type: "image",
 					image_id: "huaji",
@@ -94,9 +94,10 @@ var story = [
 				type: "single",
 				start_time: 2.0,
 				start_x: 100,
-				start_y: 100,
+				start_y: 50,
 				start_health: 10.0,
 				health_decrease_time: 1.0,
+				health_decrease_bullet: 0.5,
 				self_style: {
 					type: "image",
 					image_id: "huaji",
@@ -124,9 +125,10 @@ var story = [
 				type: "single",
 				start_time: 3.0,
 				start_x: 100,
-				start_y: 100,
+				start_y: 50,
 				start_health: 10.0,
 				health_decrease_time: 1.0,
+				health_decrease_bullet: 0.5,
 				self_style: {
 					type: "image",
 					image_id: "huaji",
@@ -199,6 +201,10 @@ window.onload = () => {
 	isloaded = true
 }
 
+function distance(x, y) {
+	return Math.sqrt(x * x + y * y)
+}
+
 function Shape(obj) {
 	Object.assign(this, obj)
 
@@ -268,7 +274,7 @@ function Bullet_array(obj) {
 			if (value.check())
 				arr.push(value)
 		})
-		if (this.timer.expire() && (this.num > 0 || this.num === -1)) {
+		if (delta_obj !== undefined && this.timer.expire() && (this.num > 0 || this.num === -1)) {
 			this.timer.reset()
 			if (this.num !== -1) this.num--
 			arr.push(new Shape(Object.assign(delta_obj, this.bullet_style)))
@@ -303,7 +309,6 @@ function Player() {
 	}
 
 	this.draw_speedchange = () => {
-		this.speedchange.update()
 		var radius = Math.min(this.speedchange.time, this.speedchange_timeout - this.speedchange.time) / (this.speedchange_timeout / 2.0) * 20
 		c.beginPath()
 		c.arc(this.shape.x, this.shape.y, radius + 5, 0, 360)
@@ -318,6 +323,7 @@ function Player() {
 		this.shape.draw()
 		if (this.speedchange.time !== -1) {
 			this.draw_speedchange()
+			this.speedchange.update()
 			if (this.speedchange.expire()) this.speedchange.time = -1
 		}
 		if (this.shoot_status) 
@@ -421,37 +427,78 @@ function Enemy(obj) {
 
 	this.draw = () => {
 		this.update()
-		this.shape.draw()
+
 		switch (this.type) {
 		case "single":
-			var dist = Math.sqrt((this.shape.x - player.shape.x) * (this.shape.x - player.shape.x) + (this.shape.y - player.shape.y) * (this.shape.y - player.shape.y))
-			if (dist >= judge_distance) {
-				var x_speed = this.bullet_speed / dist * (player.shape.x - this.shape.x)
-				var y_speed = this.bullet_speed / dist * (player.shape.y - this.shape.y)
+			var dist = distance(game.arena.player.shape.x - this.shape.x, game.arena.player.shape.y - this.shape.y)
+			if (dist >= 5) {
+				var x_speed = this.bullet_speed / dist * (game.arena.player.shape.x - this.shape.x)
+				var y_speed = this.bullet_speed / dist * (game.arena.player.shape.y - this.shape.y)
 			}
 			break
 		}
-		this.bullet_array.draw({x: this.shape.x, y: this.shape.y, x_speed: x_speed, y_speed: y_speed})
+		if (!this.expire()) {
+			this.shape.draw()
+			this.bullet_array.draw({x: this.shape.x, y: this.shape.y, x_speed: x_speed, y_speed: y_speed})
+		} else 
+			this.bullet_array.draw()
 	}
 
 }
 
 function Arena_game(obj) {
 	Object.assign(this, obj)
-	player = new Player
+	this.player = new Player
 	this.timer = new Timer
 	this.enemy_active = new Map
+	this.restart_timer = new Timer(1.0)
+	this.restart_timer.time = -1
+
+	this.clear_bullets = () => {
+		this.enemy_active.forEach((enemy) => {
+			enemy.bullet_array.reset()
+		})
+	}
+
+	this.judge = () => {
+		this.enemy_active.forEach((enemy) => {
+			if (!enemy.expire()) {
+				this.player.bullet_array.bullets.forEach((player_bullet) => {
+					if (distance(player_bullet.x - enemy.shape.x, player_bullet.y - enemy.shape.y) < player_bullet.radius + enemy.shape.radius) {
+						enemy.health -= enemy.health_decrease_bullet
+					}
+				})
+				enemy.bullet_array.bullets.forEach((enemy_bullet) => {
+					if (distance(this.player.shape.x - enemy_bullet.x, this.player.shape.y - enemy_bullet.y) < this.player.shape.radius + enemy_bullet.radius) {
+						game.life--
+						this.restart_timer.reset()
+						this.player = new Player
+					}
+				})
+			}
+		})
+		if (this.restart_timer.time !== -1) {
+			this.clear_bullets()
+			this.restart_timer.update()
+			if (this.restart_timer.expire()) this.restart_timer.time = -1
+		}
+	}
+
+	this.update = () => {
+		this.timer.update()
+		this.judge()
+	}
 
 	this.draw = () => {
-		this.timer.update()
-		player.draw()
+		this.update()
+		this.player.draw()
 		this.enemy.forEach((value, index) => {
 			if (this.timer.time >= value.start_time && !this.enemy_active.has(index)) {
 				this.enemy_active.set(index, new Enemy(value))
 			}
 		})
 		this.enemy_active.forEach((value) => {
-			if (!value.expire()) value.draw()
+			value.draw()
 		})
 	}
 
@@ -470,7 +517,7 @@ function Game() {
 	this.y4 = 290
 	this.y5 = 450
 
-	this.init = () => {
+	this.reset = () => {
 		this.score = 0
 		this.power = 0
 		this.life = num_life
@@ -478,7 +525,7 @@ function Game() {
 		this.cnt = 0
 		this.arena = new Arena_text(story[0])
 	}
-	this.init()
+	this.reset()
 
 	this.process_key = () => {
 		if (key_last === "Escape") {
@@ -630,7 +677,7 @@ function Pause() {
 				break
 			case "Restart":
 				state = "game"
-				game.init()
+				game.reset()
 				break
 			case "Return to home":
 				state = "entrance"
@@ -721,7 +768,7 @@ c.fillStyle = "black"
 c.fillRect(0, 0, canvas.width, canvas.height)
 
 var state = "entrance"
-var entrance = new Entrance, pause, loading, game, player, result = new Result
+var entrance = new Entrance, pause, loading, game, result = new Result
 
 var delta_time, current_time = new Date(), counter = 0
 draw()
