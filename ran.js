@@ -151,6 +151,99 @@ var story = [
 					bullet_time_interval: 0.5,
 					bullet_num: 5
 				}
+			},
+			{
+				type: "single",
+				start_time: 7.0,
+				start_x: 400,
+				start_y: 50,
+				start_health: 10.0,
+				health_decrease_time: 1.0,
+				health_decrease_bullet: 0.5,
+				self_style: {
+					type: "image",
+					image_id: "huaji",
+					radius: 30
+				},
+				movement: {
+					type: "simple", 
+					x_speed: 0,
+					y_speed: 150
+				},
+				bullet_speed: 300,
+				bullet_array_style: {
+					bullet_style: {
+						type: "circle",
+						radius: 8, 
+						thickness: 5,
+						fill_color: "white",
+						border_color: "#ff5757"
+					},
+					bullet_time_interval: 0.5,
+					bullet_num: 5
+				}
+			},
+			{
+				type: "single",
+				start_time: 8.0,
+				start_x: 400,
+				start_y: 50,
+				start_health: 10.0,
+				health_decrease_time: 1.0,
+				health_decrease_bullet: 0.5,
+				self_style: {
+					type: "image",
+					image_id: "huaji",
+					radius: 30
+				},
+				movement: {
+					type: "simple", 
+					x_speed: 0,
+					y_speed: 150
+				},
+				bullet_speed: 300,
+				bullet_array_style: {
+					bullet_style: {
+						type: "circle",
+						radius: 8, 
+						thickness: 5,
+						fill_color: "white",
+						border_color: "#ff5757"
+					},
+					bullet_time_interval: 0.5,
+					bullet_num: 5
+				}
+			},
+			{
+				type: "single",
+				start_time: 9.0,
+				start_x: 400,
+				start_y: 50,
+				start_health: 10.0,
+				health_decrease_time: 1.0,
+				health_decrease_bullet: 0.5,
+				self_style: {
+					type: "image",
+					image_id: "huaji",
+					radius: 30
+				},
+				movement: {
+					type: "simple", 
+					x_speed: 0,
+					y_speed: 150
+				},
+				bullet_speed: 300,
+				bullet_array_style: {
+					bullet_style: {
+						type: "circle",
+						radius: 8, 
+						thickness: 5,
+						fill_color: "white",
+						border_color: "#ff5757"
+					},
+					bullet_time_interval: 0.5,
+					bullet_num: 5
+				}
 			}
 		]
 	}
