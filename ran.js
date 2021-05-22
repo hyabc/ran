@@ -11,11 +11,51 @@ var key_last = "", key_active = new Set, isloaded = false
 var story = [
 	{
 		type: "text",
-		text: "Stage 1",
-		color: "white",
-		x: 210,
-		y: 300,
-		timeout: 1
+		content: [
+			{
+				text: "Stage 1",
+				x: 210, 
+				y: 250,
+				color: "white",
+				font: "30px Verdana"
+			},
+			{
+				text: "On Huaji trees are Huaji fruits,",
+				x: 100,
+				y: 300,
+				color: "white",
+				font: "16px Verdana"
+			},
+			{
+				text: "Under Huaji trees are you and me,",
+				x: 100,
+				y: 325,
+				color: "white",
+				font: "16px Verdana"
+			},
+			{
+				text: "What will happen to the land of Huaji fruit?",
+				x: 100,
+				y: 350,
+				color: "white",
+				font: "16px Verdana"
+			},
+			{
+				text: "滑稽树上滑稽果，滑稽树下你和我。",
+				x: 100,
+				y: 390,
+				color: "white",
+				font: "16px Verdana"
+			},
+			{
+				text: "滑稽果出现之地，会发生什么呢？",
+				x: 100,
+				y: 415,
+				color: "white",
+				font: "16px Verdana"
+			}
+		],
+		timeout: 2
 	},
 	{
 		type: "game",
@@ -23,9 +63,10 @@ var story = [
 			{
 				type: "single",
 				start_time: 0.5,
-				timeout: 10.0,
 				start_x: 100,
 				start_y: 100,
+				start_health: 10.0,
+				health_decrease: 1.0,
 				self_style: {
 					type: "image",
 					image_id: "huaji",
@@ -40,7 +81,7 @@ var story = [
 						fill_color: "white",
 						border_color: "#ff5757"
 					},
-					bullet_time_interval: 0.3,
+					bullet_time_interval: 0.2,
 					bullet_num: 20
 				},
 			}
@@ -81,14 +122,12 @@ window.onkeydown = (x) => {
 	if (st.length === 1 && 'A' <= st[0] && st[0] <= 'Z') st = st.toLowerCase()
 	key_last = st
 	key_active.add(st)
-	console.log("keydown: " + st)
 }
 
 window.onkeyup = (x) => {
 	var st = x.key
 	if (st.length === 1 && 'A' <= st[0] && st[0] <= 'Z') st = st.toLowerCase()
 	key_active.delete(st)
-	console.log("keyup: " + st)
 }
 
 window.onload = () => {
@@ -278,9 +317,11 @@ function Arena_text(obj) {
 
 	this.draw = () => {
 		this.timer.update()
-		c.fillStyle = this.color
-		c.font = "30px Verdana"
-		c.fillText(this.text, this.x, this.y)
+		this.content.forEach((value) => {
+			c.fillStyle = value.color
+			c.font = value.font
+			c.fillText(value.text, value.x, value.y)
+		})
 	}
 
 	this.expire = () => {
@@ -295,14 +336,20 @@ function Enemy(obj) {
 	this.shape = new Shape(this.self_style)
 	this.shape.x = this.start_x
 	this.shape.y = this.start_y
+	this.health = this.start_health
 	this.bullet_array = new Bullet_array(this.bullet_array_style)
 
 
 	this.expire = () => {
-		return false
+		return this.health < 0
+	}
+
+	this.update = () => {
+		this.health -= delta_time * this.health_decrease
 	}
 
 	this.draw = () => {
+		this.update()
 		this.shape.draw()
 		switch (this.type) {
 		case "single":
