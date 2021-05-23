@@ -96,9 +96,171 @@ var story = [
 						}
 					},
 					{
-						type: "odd",
+						type: "multiple",
 						bullet_angle: 30,
-						bullet_count: 13,
+						bullet_count: 12,
+						bullet_speed: 200,
+						bullet_array_style: {
+							bullet_style: {
+								type: "circle",
+								radius: 8, 
+								thickness: 5,
+								fill_color: "white",
+								border_color: "#ff5757"
+							},
+							bullet_time_interval: 1.0,
+							bullet_num: 1
+						}
+					}
+				]
+			},
+			{
+				start_time: 6.0,
+				start_x: 450,
+				start_y: 50,
+				self_style: {
+					type: "image",
+					image_id: "huaji",
+					radius: 30
+				},
+				movement: {
+					type: "simple", 
+					x_speed: -100,
+					y_speed: 0
+				},
+				health_info: {
+					start_health: 4.0,
+					health_decrease_time: 1.0,
+					health_decrease_bullet: 0.2,
+				},
+				bullet_info: [
+					{
+						type: "single",
+						bullet_speed: 300,
+						bullet_array_style: {
+							bullet_style: {
+								type: "circle",
+								radius: 8, 
+								thickness: 5,
+								fill_color: "white",
+								border_color: "#ff5757"
+							},
+							bullet_time_interval: 0.8,
+							bullet_num: 3
+						}
+					},
+					{
+						type: "multiple",
+						bullet_angle: 30,
+						bullet_count: 12,
+						bullet_speed: 200,
+						bullet_array_style: {
+							bullet_style: {
+								type: "circle",
+								radius: 8, 
+								thickness: 5,
+								fill_color: "white",
+								border_color: "#ff5757"
+							},
+							bullet_time_interval: 1.0,
+							bullet_num: 1
+						}
+					}
+				]
+			},
+			{
+				start_time: 11.0,
+				start_x: 50,
+				start_y: 50,
+				self_style: {
+					type: "image",
+					image_id: "huaji",
+					radius: 30
+				},
+				movement: {
+					type: "simple", 
+					x_speed: 0,
+					y_speed: 0
+				},
+				health_info: {
+					start_health: 4.0,
+					health_decrease_time: 1.0,
+					health_decrease_bullet: 0.2,
+				},
+				bullet_info: [
+					{
+						type: "single",
+						bullet_speed: 300,
+						bullet_array_style: {
+							bullet_style: {
+								type: "circle",
+								radius: 8, 
+								thickness: 5,
+								fill_color: "white",
+								border_color: "#ff5757"
+							},
+							bullet_time_interval: 0.8,
+							bullet_num: 3
+						}
+					},
+					{
+						type: "multiple",
+						bullet_angle: 30,
+						bullet_count: 12,
+						bullet_speed: 200,
+						bullet_array_style: {
+							bullet_style: {
+								type: "circle",
+								radius: 8, 
+								thickness: 5,
+								fill_color: "white",
+								border_color: "#ff5757"
+							},
+							bullet_time_interval: 1.0,
+							bullet_num: 1
+						}
+					}
+				]
+			},
+			{
+				start_time: 11.0,
+				start_x: 450,
+				start_y: 50,
+				self_style: {
+					type: "image",
+					image_id: "huaji",
+					radius: 30
+				},
+				movement: {
+					type: "simple", 
+					x_speed: 0,
+					y_speed: 0
+				},
+				health_info: {
+					start_health: 4.0,
+					health_decrease_time: 1.0,
+					health_decrease_bullet: 0.2,
+				},
+				bullet_info: [
+					{
+						type: "single",
+						bullet_speed: 300,
+						bullet_array_style: {
+							bullet_style: {
+								type: "circle",
+								radius: 8, 
+								thickness: 5,
+								fill_color: "white",
+								border_color: "#ff5757"
+							},
+							bullet_time_interval: 0.8,
+							bullet_num: 3
+						}
+					},
+					{
+						type: "multiple",
+						bullet_angle: 30,
+						bullet_count: 12,
 						bullet_speed: 200,
 						bullet_array_style: {
 							bullet_style: {
@@ -114,6 +276,8 @@ var story = [
 					}
 				]
 			}
+
+
 		]
 	}
 ]
@@ -425,10 +589,7 @@ function Enemy(obj) {
 				case "single":
 					value.add({x: this.shape.x, y: this.shape.y, x_speed: dx, y_speed: dy})
 					break
-				case "circle":
-					value.add_multiple([{x: this.shape.x, y: this.shape.y, x_speed: 400, y_speed: 0}, {x: this.shape.x, y: this.shape.y, x_speed: 0, y_speed: 400}])
-					break
-				case "odd":
+				case "multiple":
 					var arr = []
 					for (var angle = -t.bullet_angle * (t.bullet_count - 1) / 2;angle <= t.bullet_angle * (t.bullet_count - 1) / 2;angle += t.bullet_angle) {
 						var angle_rad = angle * 2.0 * Math.PI / 360.0
@@ -439,8 +600,6 @@ function Enemy(obj) {
 					}
 					value.add_multiple(arr)
 					break
-					
-					
 				}
 			value.draw()
 		})
@@ -541,7 +700,6 @@ function Game() {
 
 	this.reset = () => {
 		this.score = 0
-		this.power = 0
 		this.life = num_life
 		this.bomb = num_bomb
 		this.cnt = 0
@@ -588,12 +746,10 @@ function Game() {
 		c.fillText("Score", this.x1, this.y1)
 		c.fillText("Player", this.x1, this.y2)
 		c.fillText("Bomb", this.x1, this.y3)
-		c.fillText("Power", this.x1, this.y4)
 
 		c.fillStyle = "white"
 		c.font = "20px Verdana"
 		c.fillText(this.score.toString().padStart(8, '0'), this.x2, this.y1)
-		c.fillText(this.power, this.x2, this.y4)
 		c.fillStyle = "#f2446f"
 		for (let i = 0;i < this.life;i++) c.fillText("\u2605", this.x2 + i * 20, this.y2)
 		c.fillStyle = "#2f7bf5"
