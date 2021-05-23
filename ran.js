@@ -3,6 +3,7 @@ var game_width = 500
 var fps = 120
 var num_life = 3
 var num_bomb = 3
+var min_distance = 5
 var title = "Project Ran"
 
 var key_last = "", key_active = new Set, isloaded = false
@@ -10,6 +11,7 @@ var key_last = "", key_active = new Set, isloaded = false
 var story = [
 	{
 		type: "text",
+		timeout: 2,
 		content: [
 			{
 				text: "Stage 1",
@@ -53,20 +55,15 @@ var story = [
 				color: "white",
 				font: "16px Verdana"
 			}
-		],
-		timeout: 2
+		]
 	},
 	{
 		type: "game",
 		enemy: [
 			{
-				type: "single",
 				start_time: 1.0,
-				start_x: 100,
+				start_x: 50,
 				start_y: 50,
-				start_health: 10.0,
-				health_decrease_time: 1.0,
-				health_decrease_bullet: 0.5,
 				self_style: {
 					type: "image",
 					image_id: "huaji",
@@ -74,176 +71,48 @@ var story = [
 				},
 				movement: {
 					type: "simple", 
-					x_speed: 0,
-					y_speed: 150
+					x_speed: 100,
+					y_speed: 0
 				},
-				bullet_speed: 300,
-				bullet_array_style: {
-					bullet_style: {
-						type: "circle",
-						radius: 8, 
-						thickness: 5,
-						fill_color: "white",
-						border_color: "#ff5757"
+				health_info: {
+					start_health: 4.0,
+					health_decrease_time: 1.0,
+					health_decrease_bullet: 0.2,
+				},
+				bullet_info: [
+					{
+						type: "single",
+						bullet_speed: 300,
+						bullet_array_style: {
+							bullet_style: {
+								type: "circle",
+								radius: 8, 
+								thickness: 5,
+								fill_color: "white",
+								border_color: "#ff5757"
+							},
+							bullet_time_interval: 0.8,
+							bullet_num: 3
+						}
 					},
-					bullet_time_interval: 0.5,
-					bullet_num: 5
-				}
-			},
-			{
-				type: "single",
-				start_time: 2.0,
-				start_x: 100,
-				start_y: 50,
-				start_health: 10.0,
-				health_decrease_time: 1.0,
-				health_decrease_bullet: 0.5,
-				self_style: {
-					type: "image",
-					image_id: "huaji",
-					radius: 30
-				},
-				movement: {
-					type: "simple", 
-					x_speed: 0,
-					y_speed: 150
-				},
-				bullet_speed: 300,
-				bullet_array_style: {
-					bullet_style: {
-						type: "circle",
-						radius: 8, 
-						thickness: 5,
-						fill_color: "white",
-						border_color: "#ff5757"
-					},
-					bullet_time_interval: 0.5,
-					bullet_num: 5
-				}
-			},
-			{
-				type: "single",
-				start_time: 3.0,
-				start_x: 100,
-				start_y: 50,
-				start_health: 10.0,
-				health_decrease_time: 1.0,
-				health_decrease_bullet: 0.5,
-				self_style: {
-					type: "image",
-					image_id: "huaji",
-					radius: 30
-				},
-				movement: {
-					type: "simple", 
-					x_speed: 0,
-					y_speed: 150
-				},
-				bullet_speed: 300,
-				bullet_array_style: {
-					bullet_style: {
-						type: "circle",
-						radius: 8, 
-						thickness: 5,
-						fill_color: "white",
-						border_color: "#ff5757"
-					},
-					bullet_time_interval: 0.5,
-					bullet_num: 5
-				}
-			},
-			{
-				type: "single",
-				start_time: 7.0,
-				start_x: 400,
-				start_y: 50,
-				start_health: 10.0,
-				health_decrease_time: 1.0,
-				health_decrease_bullet: 0.5,
-				self_style: {
-					type: "image",
-					image_id: "huaji",
-					radius: 30
-				},
-				movement: {
-					type: "simple", 
-					x_speed: 0,
-					y_speed: 150
-				},
-				bullet_speed: 300,
-				bullet_array_style: {
-					bullet_style: {
-						type: "circle",
-						radius: 8, 
-						thickness: 5,
-						fill_color: "white",
-						border_color: "#ff5757"
-					},
-					bullet_time_interval: 0.5,
-					bullet_num: 5
-				}
-			},
-			{
-				type: "single",
-				start_time: 8.0,
-				start_x: 400,
-				start_y: 50,
-				start_health: 10.0,
-				health_decrease_time: 1.0,
-				health_decrease_bullet: 0.5,
-				self_style: {
-					type: "image",
-					image_id: "huaji",
-					radius: 30
-				},
-				movement: {
-					type: "simple", 
-					x_speed: 0,
-					y_speed: 150
-				},
-				bullet_speed: 300,
-				bullet_array_style: {
-					bullet_style: {
-						type: "circle",
-						radius: 8, 
-						thickness: 5,
-						fill_color: "white",
-						border_color: "#ff5757"
-					},
-					bullet_time_interval: 0.5,
-					bullet_num: 5
-				}
-			},
-			{
-				type: "single",
-				start_time: 9.0,
-				start_x: 400,
-				start_y: 50,
-				start_health: 10.0,
-				health_decrease_time: 1.0,
-				health_decrease_bullet: 0.5,
-				self_style: {
-					type: "image",
-					image_id: "huaji",
-					radius: 30
-				},
-				movement: {
-					type: "simple", 
-					x_speed: 0,
-					y_speed: 150
-				},
-				bullet_speed: 300,
-				bullet_array_style: {
-					bullet_style: {
-						type: "circle",
-						radius: 8, 
-						thickness: 5,
-						fill_color: "white",
-						border_color: "#ff5757"
-					},
-					bullet_time_interval: 0.5,
-					bullet_num: 5
-				}
+					{
+						type: "odd",
+						bullet_angle: 30,
+						bullet_count: 13,
+						bullet_speed: 200,
+						bullet_array_style: {
+							bullet_style: {
+								type: "circle",
+								radius: 8, 
+								thickness: 5,
+								fill_color: "white",
+								border_color: "#ff5757"
+							},
+							bullet_time_interval: 1.0,
+							bullet_num: 1
+						}
+					}
+				]
 			}
 		]
 	}
@@ -386,6 +255,16 @@ function Bullet_array(obj) {
 		}
 	}
 
+	this.add_multiple = (delta_obj_arr) => {
+		if (this.timer.expire() && (this.num > 0 || this.num === -1)) {
+			this.timer.reset()
+			if (this.num !== -1) this.num--
+			delta_obj_arr.forEach((delta_obj) => {
+				this.bullets.push(new Shape(Object.assign(delta_obj, this.bullet_style)))
+			})
+		}
+	}
+
 	this.reset = () => {
 		this.bullets = []
 	}
@@ -511,15 +390,16 @@ function Enemy(obj) {
 	this.shape = new Shape(this.self_style)
 	this.shape.x = this.start_x
 	this.shape.y = this.start_y
-	this.health = this.start_health
-	this.bullet_array = new Bullet_array(this.bullet_array_style)
+	this.health = this.health_info.start_health
+	this.bullet_arrays = []
+	this.bullet_info.forEach((value) => {this.bullet_arrays.push(new Bullet_array(value.bullet_array_style))})
 
 	this.expire = () => {
-		return this.health < 0
+		return this.health < 0 || !this.shape.check()
 	}
 
 	this.update = () => {
-		this.health -= delta_time * this.health_decrease_time
+		this.health -= delta_time * this.health_info.health_decrease_time
 		switch (this.movement.type) {
 		case "simple":
 			this.shape.x_speed = this.movement.x_speed
@@ -531,21 +411,39 @@ function Enemy(obj) {
 
 	this.draw = () => {
 		this.update()
-
-		switch (this.type) {
-		case "single":
-			var dist = distance(game.arena.player.shape.x - this.shape.x, game.arena.player.shape.y - this.shape.y)
-			if (dist >= 5) {
-				var x_speed = this.bullet_speed / dist * (game.arena.player.shape.x - this.shape.x)
-				var y_speed = this.bullet_speed / dist * (game.arena.player.shape.y - this.shape.y)
-			}
-			break
-		}
-		if (!this.expire()) {
+		if (!this.expire()) 
 			this.shape.draw()
-			this.bullet_array.add({x: this.shape.x, y: this.shape.y, x_speed: x_speed, y_speed: y_speed})
-		}
-		this.bullet_array.draw()
+		this.bullet_arrays.forEach((value, index) => {
+			var dist = distance(game.arena.player.shape.x - this.shape.x, game.arena.player.shape.y - this.shape.y)
+			var t = this.bullet_info[index]
+			if (dist >= min_distance) {
+				var dx = t.bullet_speed / dist * (game.arena.player.shape.x - this.shape.x)
+				var dy = t.bullet_speed / dist * (game.arena.player.shape.y - this.shape.y)
+			}
+			if (!this.expire()) 
+				switch (t.type) {
+				case "single":
+					value.add({x: this.shape.x, y: this.shape.y, x_speed: dx, y_speed: dy})
+					break
+				case "circle":
+					value.add_multiple([{x: this.shape.x, y: this.shape.y, x_speed: 400, y_speed: 0}, {x: this.shape.x, y: this.shape.y, x_speed: 0, y_speed: 400}])
+					break
+				case "odd":
+					var arr = []
+					for (var angle = -t.bullet_angle * (t.bullet_count - 1) / 2;angle <= t.bullet_angle * (t.bullet_count - 1) / 2;angle += t.bullet_angle) {
+						var angle_rad = angle * 2.0 * Math.PI / 360.0
+						var x1 = dx * Math.cos(angle_rad) - dy * Math.sin(angle_rad)
+						var y1 = dy * Math.cos(angle_rad) + dx * Math.sin(angle_rad)
+						arr.push({x: this.shape.x, y: this.shape.y, x_speed: x1, y_speed: y1})
+						console.log(distance(x1, y1))
+					}
+					value.add_multiple(arr)
+					break
+					
+					
+				}
+			value.draw()
+		})
 	}
 
 }
@@ -562,7 +460,7 @@ function Arena_game(obj) {
 
 	this.clear_bullets = () => {
 		this.enemy_active.forEach((enemy) => {
-			enemy.bullet_array.reset()
+			enemy.bullet_arrays.forEach((bullet_array) => {bullet_array.reset()})
 		})
 	}
 
@@ -571,17 +469,17 @@ function Arena_game(obj) {
 			if (!enemy.expire()) {
 				this.player.bullet_array.bullets.forEach((player_bullet) => {
 					if (distance(player_bullet.x - enemy.shape.x, player_bullet.y - enemy.shape.y) < player_bullet.radius + enemy.shape.radius) {
-						enemy.health -= enemy.health_decrease_bullet
+						enemy.health -= enemy.health_info.health_decrease_bullet
 					}
 				})
-				enemy.bullet_array.bullets.forEach((enemy_bullet) => {
+				enemy.bullet_arrays.forEach((bullet_array) => {bullet_array.bullets.forEach((enemy_bullet) => {
 					if (distance(this.player.shape.x - enemy_bullet.x, this.player.shape.y - enemy_bullet.y) < this.player.shape.radius + enemy_bullet.radius) {
 						game.life--
 						game.bomb = num_bomb
 						this.restart_timer.reset()
 						this.player = new Player
 					}
-				})
+				})})
 			}
 		})
 	}
