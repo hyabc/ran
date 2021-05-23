@@ -171,16 +171,20 @@ var story = [
 			{
 				start_time: 11.0,
 				start_x: 100,
-				start_y: 50,
+				start_y: 0,
 				self_style: {
 					type: "image",
 					image_id: "huaji",
 					radius: 30
 				},
 				movement: {
-					type: "simple", 
-					x_speed: 0,
-					y_speed: 0
+					type: "custom", 
+					func: (time) => {
+						if (time < 0.5) 
+							return {x: 100, y: time / 0.5 * 100}
+						else
+							return {x: 100, y: 100}
+					}
 				},
 				health_info: {
 					start_health: 4.0,
@@ -208,16 +212,20 @@ var story = [
 			{
 				start_time: 11.0,
 				start_x: 180,
-				start_y: 50,
+				start_y: 0,
 				self_style: {
 					type: "image",
 					image_id: "huaji",
 					radius: 30
 				},
 				movement: {
-					type: "simple", 
-					x_speed: 0,
-					y_speed: 0
+					type: "custom", 
+					func: (time) => {
+						if (time < 0.5) 
+							return {x: 180, y: time / 0.5 * 100}
+						else
+							return {x: 180, y: 100}
+					}
 				},
 				health_info: {
 					start_health: 4.0,
@@ -245,16 +253,20 @@ var story = [
 			{
 				start_time: 11.0,
 				start_x: 320,
-				start_y: 50,
+				start_y: 0,
 				self_style: {
 					type: "image",
 					image_id: "huaji",
 					radius: 30
 				},
 				movement: {
-					type: "simple", 
-					x_speed: 0,
-					y_speed: 0
+					type: "custom", 
+					func: (time) => {
+						if (time < 0.5) 
+							return {x: 320, y: time / 0.5 * 100}
+						else
+							return {x: 320, y: 100}
+					}
 				},
 				health_info: {
 					start_health: 4.0,
@@ -283,16 +295,20 @@ var story = [
 			{
 				start_time: 11.0,
 				start_x: 400,
-				start_y: 50,
+				start_y: 0,
 				self_style: {
 					type: "image",
 					image_id: "huaji",
 					radius: 30
 				},
 				movement: {
-					type: "simple", 
-					x_speed: 0,
-					y_speed: 0
+					type: "custom", 
+					func: (time) => {
+						if (time < 0.5) 
+							return {x: 400, y: time / 0.5 * 100}
+						else
+							return {x: 400, y: 100}
+					}
 				},
 				health_info: {
 					start_health: 4.0,
@@ -317,8 +333,6 @@ var story = [
 					}
 				]
 			}
-
-
 		]
 	}
 ]
@@ -604,12 +618,18 @@ function Enemy(obj) {
 	}
 
 	this.update = () => {
+		this.timer.update()
 		this.health -= delta_time * this.health_info.health_decrease_time
 		switch (this.movement.type) {
 		case "simple":
 			this.shape.x_speed = this.movement.x_speed
 			this.shape.y_speed = this.movement.y_speed
 			this.shape.update()
+			break
+		case "custom":
+			var ret = this.movement.func(this.timer.time)
+			this.shape.x = ret.x
+			this.shape.y = ret.y
 			break
 		}
 	}
@@ -637,7 +657,6 @@ function Enemy(obj) {
 						var x1 = dx * Math.cos(angle_rad) - dy * Math.sin(angle_rad)
 						var y1 = dy * Math.cos(angle_rad) + dx * Math.sin(angle_rad)
 						arr.push({x: this.shape.x, y: this.shape.y, x_speed: x1, y_speed: y1})
-						console.log(distance(x1, y1))
 					}
 					value.add_multiple(arr)
 					break
