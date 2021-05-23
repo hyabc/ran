@@ -170,7 +170,7 @@ var story = [
 			},
 			{
 				start_time: 11.0,
-				start_x: 50,
+				start_x: 100,
 				start_y: 50,
 				self_style: {
 					type: "image",
@@ -201,30 +201,13 @@ var story = [
 							},
 							bullet_time_interval: 0.8,
 							bullet_num: 3
-						}
-					},
-					{
-						type: "multiple",
-						bullet_angle: 30,
-						bullet_count: 12,
-						bullet_speed: 200,
-						bullet_array_style: {
-							bullet_style: {
-								type: "circle",
-								radius: 8, 
-								thickness: 5,
-								fill_color: "white",
-								border_color: "#ff5757"
-							},
-							bullet_time_interval: 1.0,
-							bullet_num: 1
 						}
 					}
 				]
 			},
 			{
 				start_time: 11.0,
-				start_x: 450,
+				start_x: 180,
 				start_y: 50,
 				self_style: {
 					type: "image",
@@ -256,12 +239,32 @@ var story = [
 							bullet_time_interval: 0.8,
 							bullet_num: 3
 						}
-					},
+					}
+				]
+			},
+			{
+				start_time: 11.0,
+				start_x: 320,
+				start_y: 50,
+				self_style: {
+					type: "image",
+					image_id: "huaji",
+					radius: 30
+				},
+				movement: {
+					type: "simple", 
+					x_speed: 0,
+					y_speed: 0
+				},
+				health_info: {
+					start_health: 4.0,
+					health_decrease_time: 1.0,
+					health_decrease_bullet: 0.2,
+				},
+				bullet_info: [
 					{
-						type: "multiple",
-						bullet_angle: 30,
-						bullet_count: 12,
-						bullet_speed: 200,
+						type: "single",
+						bullet_speed: 300,
 						bullet_array_style: {
 							bullet_style: {
 								type: "circle",
@@ -270,8 +273,46 @@ var story = [
 								fill_color: "white",
 								border_color: "#ff5757"
 							},
-							bullet_time_interval: 1.0,
-							bullet_num: 1
+							bullet_time_interval: 0.8,
+							bullet_num: 3
+						}
+					}
+				]
+			},
+
+			{
+				start_time: 11.0,
+				start_x: 400,
+				start_y: 50,
+				self_style: {
+					type: "image",
+					image_id: "huaji",
+					radius: 30
+				},
+				movement: {
+					type: "simple", 
+					x_speed: 0,
+					y_speed: 0
+				},
+				health_info: {
+					start_health: 4.0,
+					health_decrease_time: 1.0,
+					health_decrease_bullet: 0.2,
+				},
+				bullet_info: [
+					{
+						type: "single",
+						bullet_speed: 300,
+						bullet_array_style: {
+							bullet_style: {
+								type: "circle",
+								radius: 8, 
+								thickness: 5,
+								fill_color: "white",
+								border_color: "#ff5757"
+							},
+							bullet_time_interval: 0.8,
+							bullet_num: 3
 						}
 					}
 				]
