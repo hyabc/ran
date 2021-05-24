@@ -336,6 +336,19 @@ var story = [
 				]
 			}
 		]
+	},
+	{
+		type: "text",
+		timeout: -1,
+		content: [
+			{
+				text: "All Stages Clear!",
+				x: 150, 
+				y: 300,
+				color: "white",
+				font: "30px Verdana"
+			}
+		]
 	}
 ]
 
@@ -444,11 +457,17 @@ function Timer(timeout) {
 	this.timeout = timeout
 
 	this.update = () => {
-		this.time += delta_time
+		if (this.active()) 
+			this.time += delta_time
+		else
+			console.log("Timer error")
 	}
 
 	this.expire = () => {
-		return this.time >= this.timeout
+		if (this.active()) 
+			return this.time >= this.timeout
+		else
+			return false
 	}
 
 	this.reset = () => {
@@ -602,9 +621,11 @@ function Player() {
 function Arena_text(obj) {
 	Object.assign(this, obj)
 	this.timer = new Timer(this.timeout)
+	if (this.timeout === -1) this.timer.disable()
 
 	this.draw = () => {
-		this.timer.update()
+		if (this.timer.active()) 
+			this.timer.update()
 		this.content.forEach((value) => {
 			c.fillStyle = value.color
 			c.font = value.font
@@ -687,10 +708,11 @@ function Arena_game(obj) {
 	this.player = new Player
 	this.timer = new Timer
 	this.enemy_active = new Map
-	this.restart_timer = new Timer(2.0)
+	this.restart_timer = new Timer(1.0)
 	this.restart_timer.disable()
-	this.bomb_timer = new Timer(1.0)
+	this.bomb_timer = new Timer(2.0)
 	this.bomb_timer.disable()
+	this.expired = false
 
 	this.clear_bullets = () => {
 		this.enemy_active.forEach((enemy) => {
@@ -729,9 +751,37 @@ function Arena_game(obj) {
 		}
 	}
 
+	this.update_enemy = () => {
+		var new_enemy = 0, active_enemy = 0
+		this.enemy.forEach((value, index) => {
+			if (this.timer.time >= value.start_time && !this.enemy_active.has(index)) {
+				this.enemy_active.set(index, new Enemy(value))
+				new_enemy++
+			}
+		})
+		this.enemy_active.forEach((value) => {
+			if (!value.expire()) 
+				active_enemy++
+		})
+		if (active_enemy === 0 && new_enemy === 0) {
+			var nearest_time = -1
+			this.enemy.forEach((value, index) => {
+				if (!this.enemy_active.has(index)) {
+					if (nearest_time === -1 || value.start_time < nearest_time)
+						nearest_time = value.start_time
+				}
+			})
+			if (nearest_time === -1) 
+				this.expired = true
+			else if (nearest_time - 1.0 > this.timer.time)
+				this.timer.time = nearest_time - 1.0
+		}
+	}
+
 	this.update = () => {
 		this.process_key()
 		this.timer.update()
+		this.update_enemy()
 		this.judge()
 		if (this.restart_timer.active()) {
 			this.clear_bullets()
@@ -752,18 +802,13 @@ function Arena_game(obj) {
 	this.draw = () => {
 		this.update()
 		this.player.draw()
-		this.enemy.forEach((value, index) => {
-			if (this.timer.time >= value.start_time && !this.enemy_active.has(index)) {
-				this.enemy_active.set(index, new Enemy(value))
-			}
-		})
 		this.enemy_active.forEach((value) => {
 			value.draw()
 		})
 	}
 
 	this.expire = () => {
-		return false
+		return this.expired
 	}
 }
 
