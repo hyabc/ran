@@ -743,6 +743,10 @@ function Arena_game(obj) {
 			this.bomb_timer.update()
 			if (this.bomb_timer.expire()) this.bomb_timer.disable()
 		}
+		if (game.life <= 0) {
+			state = "gameover"
+			gameover = new Gameover
+		}
 	}
 
 	this.draw = () => {
@@ -964,6 +968,51 @@ function Pause() {
 	}
 }
 
+function Gameover() {
+	this.options = ["Restart", "Return to home"]
+	this.base_x = 200, this.base_y = 300
+	this.title_x = 350, this.title_y = 200
+	this.delta_y = 50
+	this.current_item = 0
+
+	this.process_key = () => {
+		if (key_last === "ArrowDown" && this.current_item < this.options.length - 1) this.current_item++
+		if (key_last === "ArrowUp" && this.current_item > 0) this.current_item--
+		if (key_last === "Enter" || key_last === "z") {
+			switch (this.options[this.current_item]) {
+			case "Restart":
+				state = "game"
+				game.reset()
+				break
+			case "Return to home":
+				state = "entrance"
+				entrance = new Entrance
+				break
+			}
+		}
+		key_last = ""
+	}
+
+	this.update = () => {
+		this.process_key()
+	}
+
+	this.draw = () => {
+		this.update()
+		c.fillStyle = "white"
+		c.font = "40px Verdana"
+		c.fillText("滿身瘡痍", this.title_x, this.title_y)
+		this.options.forEach((value, index) => {
+			if (index === this.current_item)
+				c.fillStyle = "white"
+			else
+				c.fillStyle = "grey"
+			c.font = "30px Verdana"
+			c.fillText(value, this.base_x, this.base_y + index * this.delta_y)
+		})
+	}
+}
+
 function Loading() {
 	this.title_x = 200, this.title_y = 300
 
@@ -1002,6 +1051,9 @@ function draw() {
 	case "pause": 
 		pause.draw()
 		break
+	case "gameover": 
+		gameover.draw()
+		break
 	case "loading":
 		loading.draw()
 		break
@@ -1021,7 +1073,7 @@ c.fillStyle = "black"
 c.fillRect(0, 0, canvas.width, canvas.height)
 
 var state = "entrance"
-var entrance = new Entrance, pause, loading, game, result = new Result
+var entrance = new Entrance, pause, loading, game, gameover, result = new Result
 
 var delta_time, current_time = new Date(), counter = 0
 draw()
