@@ -340,6 +340,7 @@ var story = [
 	{
 		type: "text",
 		timeout: -1,
+		enter_continue: true,
 		content: [
 			{
 				text: "All Stages Clear!",
@@ -347,7 +348,14 @@ var story = [
 				y: 300,
 				color: "white",
 				font: "30px Verdana"
-			}
+			},
+			{
+				text: "Press Enter to continue",
+				x: 280,
+				y: 500,
+				color: "white",
+				font: "16px Verdana"
+			},
 		]
 	}
 ]
@@ -620,12 +628,26 @@ function Player() {
 
 function Arena_text(obj) {
 	Object.assign(this, obj)
+	this.expired = false
 	this.timer = new Timer(this.timeout)
 	if (this.timeout === -1) this.timer.disable()
 
-	this.draw = () => {
+	this.process_key = () => {
+		if (key_last === "Enter") {
+			this.expired = true
+			key_last = ""
+		}
+	}
+
+	this.update = () => {
 		if (this.timer.active()) 
 			this.timer.update()
+		if (this.enter_continue === true)
+			this.process_key()
+	}
+
+	this.draw = () => {
+		this.update()
 		this.content.forEach((value) => {
 			c.fillStyle = value.color
 			c.font = value.font
@@ -634,9 +656,8 @@ function Arena_text(obj) {
 	}
 
 	this.expire = () => {
-		return this.timer.expire()
+		return this.timer.expire() || this.expired
 	}
-
 }
 
 function Enemy(obj) {
@@ -854,7 +875,9 @@ function Game() {
 		this.arena.draw()
 		if (this.arena.expire()) {
 			this.cnt++
-			if (story[this.cnt].type === "text")
+			if (this.cnt >= story.length)
+				state = "entrance"
+			else if (story[this.cnt].type === "text")
 				this.arena = new Arena_text(story[this.cnt])
 			else if (story[this.cnt].type === "game")
 				this.arena = new Arena_game(story[this.cnt])
