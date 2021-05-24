@@ -102,7 +102,8 @@ var story = [
 						bullet_speed: 200,
 						bullet_array_style: {
 							bullet_style: {
-								type: "circle",
+								type: "leaf",
+								angle: 120,
 								radius: 8, 
 								thickness: 5,
 								fill_color: "white",
@@ -156,7 +157,8 @@ var story = [
 						bullet_speed: 200,
 						bullet_array_style: {
 							bullet_style: {
-								type: "circle",
+								type: "leaf",
+								angle: 150,
 								radius: 8, 
 								thickness: 5,
 								fill_color: "white",
@@ -402,7 +404,20 @@ function Shape(obj) {
 		switch (this.type) {
 		case "circle":
 			c.beginPath()
-			c.arc(this.x, this.y, this.radius, 0, 360)
+			c.arc(this.x, this.y, this.radius, 0, 2 * Math.PI)
+			c.lineWidth = this.thickness
+			c.strokeStyle = this.border_color
+			c.fillStyle = this.fill_color
+			c.stroke()
+			c.fill()
+			break
+		case "leaf":
+			c.beginPath()
+			var angle_rad = this.angle * 2.0 * Math.PI / 360.0
+			var dx = this.radius * 1.414 * Math.cos(angle_rad + Math.PI / 4), dy = this.radius * 1.414 * Math.sin(angle_rad + Math.PI / 4)
+			c.arc(this.x - dx, this.y - dy, 2 * this.radius, 0 * Math.PI + angle_rad, 0.5 * Math.PI + angle_rad)
+			c.arc(this.x + dx, this.y + dy, 2 * this.radius, 1 * Math.PI + angle_rad, 1.5 * Math.PI + angle_rad)
+			c.arc(this.x - dx, this.y - dy, 2 * this.radius, 0 * Math.PI + angle_rad, 0.5 * Math.PI + angle_rad)
 			c.lineWidth = this.thickness
 			c.strokeStyle = this.border_color
 			c.fillStyle = this.fill_color
@@ -512,7 +527,7 @@ function Player() {
 	this.draw_speedchange = () => {
 		var radius = Math.min(this.speedchange.time, this.speedchange_timeout - this.speedchange.time) / (this.speedchange_timeout / 2.0) * 20
 		c.beginPath()
-		c.arc(this.shape.x, this.shape.y, radius + 5, 0, 360)
+		c.arc(this.shape.x, this.shape.y, radius + 5, 0, 2 * Math.PI)
 		c.lineWidth = 2
 		c.strokeStyle = "#a1a1a1"
 		c.stroke()
